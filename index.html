@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>friLingue - Dashboard Inscriptions</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0f1c;
+            --bg-secondary: #111827;
+            --bg-card: #1a2235;
+            --accent-orange: #f97316;
+            --accent-blue: #3b82f6;
+            --accent-green: #10b981;
+            --accent-purple: #8b5cf6;
+            --accent-pink: #ec4899;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border: #2d3a52;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            background-image: 
+                radial-gradient(ellipse at 20% 0%, rgba(249, 115, 22, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 100%, rgba(59, 130, 246, 0.08) 0%, transparent 50%);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--accent-orange), var(--accent-pink));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+
+        .logo h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--text-primary), var(--text-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .logo span {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            display: block;
+        }
+
+        .config-section {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            border: 1px solid var(--border);
+        }
+
+        .config-section h2 {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+            font-weight: 500;
+        }
+
+        .config-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .config-field {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .config-field label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-family: 'Space Mono', monospace;
+        }
+
+        .config-field input {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            color: var(--text-primary);
+            font-family: 'Space Mono', monospace;
+            font-size: 0.85rem;
+            transition: border-color 0.2s;
+        }
+
+        .config-field input:focus {
+            outline: none;
+            border-color: var(--accent-orange);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, var(--accent-orange), var(--accent-pink));
+            border: none;
+            border-radius: 8px;
+            padding: 0.75rem 2rem;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.95rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(249, 115, 22, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 1.5rem;
+            border: 1px solid var(--border);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent-orange), var(--accent-pink));
+        }
+
+        .stat-card.blue::before {
+            background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple));
+        }
+
+        .stat-card.green::before {
+            background: linear-gradient(90deg, var(--accent-green), var(--accent-blue));
+        }
+
+        .stat-card.purple::before {
+            background: linear-gradient(90deg, var(--accent-purple), var(--accent-pink));
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            font-family: 'Space Mono', monospace;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .stat-change {
+            font-size: 0.8rem;
+            color: var(--accent-green);
+            margin-top: 0.5rem;
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 1024px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .chart-card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 1.5rem;
+            border: 1px solid var(--border);
+        }
+
+        .chart-card.full-width {
+            grid-column: span 2;
+        }
+
+        @media (max-width: 1024px) {
+            .chart-card.full-width {
+                grid-column: span 1;
+            }
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .chart-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .chart-subtitle {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .filter-btn {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 0.4rem 0.8rem;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .filter-btn:hover, .filter-btn.active {
+            background: var(--accent-orange);
+            border-color: var(--accent-orange);
+            color: white;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(10, 15, 28, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+
+        .loading-overlay.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .loader {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .loader-spinner {
+            width: 48px;
+            height: 48px;
+            border: 3px solid var(--border);
+            border-top-color: var(--accent-orange);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 8px;
+            padding: 1rem;
+            color: #ef4444;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .error-message.visible {
+            display: block;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-weight: 400;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        td {
+            font-size: 0.95rem;
+        }
+
+        tr:hover td {
+            background: rgba(249, 115, 22, 0.05);
+        }
+
+        .camp-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .year-selector {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loader">
+            <div class="loader-spinner"></div>
+            <span style="color: var(--text-secondary);">Chargement des données...</span>
+        </div>
+    </div>
+
+    <div class="container">
+        <header>
+            <div class="logo">
+                <div class="logo-icon">fL</div>
+                <div>
+                    <h1>friLingue Analytics</h1>
+                    <span>Dashboard des inscriptions</span>
+                </div>
+            </div>
+            <div style="text-align: right;">
+                <span id="lastUpdate" style="font-size: 0.8rem; color: var(--text-muted);"></span>
+            </div>
+        </header>
+
+        <div class="config-section" id="configSection">
+            <h2>⚙️ Configuration Airtable</h2>
+            <div class="error-message" id="errorMessage"></div>
+            <div class="config-grid">
+                <div class="config-field">
+                    <label>Base ID</label>
+                    <input type="text" id="baseId" value="appwbsKhXYrTt5cil" placeholder="appXXXXXXXXXXXXX">
+                </div>
+                <div class="config-field">
+                    <label>Personal Access Token</label>
+                    <input type="password" id="apiToken" value="" placeholder="patXXXXXXXX.XXXXX">
+                </div>
+                <div class="config-field">
+                    <label>Nom de la table</label>
+                    <input type="text" id="tableName" value="bookings" placeholder="bookings">
+                </div>
+            </div>
+            <button class="btn" id="loadDataBtn" onclick="loadData()">Charger les données</button>
+        </div>
+
+        <div id="dashboardContent" class="hidden">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Total Inscriptions</div>
+                    <div class="stat-value" id="totalBookings">-</div>
+                </div>
+                <div class="stat-card blue">
+                    <div class="stat-label">Revenus Totaux</div>
+                    <div class="stat-value" id="totalRevenue">-</div>
+                </div>
+                <div class="stat-card green">
+                    <div class="stat-label">Semaines Vendues</div>
+                    <div class="stat-value" id="totalWeeks">-</div>
+                </div>
+                <div class="stat-card purple">
+                    <div class="stat-label">Prix Moyen</div>
+                    <div class="stat-value" id="avgPrice">-</div>
+                </div>
+            </div>
+
+            <div class="charts-grid">
+                <div class="chart-card full-width">
+                    <div class="chart-header">
+                        <div>
+                            <div class="chart-title">📈 Inscriptions par mois</div>
+                            <div class="chart-subtitle">Évolution mensuelle des réservations</div>
+                        </div>
+                        <div class="year-selector" id="yearSelector"></div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="monthlyChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <div>
+                            <div class="chart-title">🏕️ Répartition par camp</div>
+                            <div class="chart-subtitle">Nombre d'inscriptions par lieu</div>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="campChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <div>
+                            <div class="chart-title">💰 Revenus par camp</div>
+                            <div class="chart-subtitle">Chiffre d'affaires par lieu</div>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="revenueChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-card full-width">
+                    <div class="chart-header">
+                        <div>
+                            <div class="chart-title">📊 Comparaison annuelle</div>
+                            <div class="chart-subtitle">Inscriptions par année</div>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="yearlyChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-card full-width">
+                    <div class="chart-header">
+                        <div>
+                            <div class="chart-title">📋 Détail par camp et par mois</div>
+                            <div class="chart-subtitle">Tableau récapitulatif</div>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <table id="detailTable">
+                            <thead>
+                                <tr>
+                                    <th>Camp</th>
+                                    <th>Jan</th>
+                                    <th>Fév</th>
+                                    <th>Mar</th>
+                                    <th>Avr</th>
+                                    <th>Mai</th>
+                                    <th>Juin</th>
+                                    <th>Juil</th>
+                                    <th>Août</th>
+                                    <th>Sep</th>
+                                    <th>Oct</th>
+                                    <th>Nov</th>
+                                    <th>Déc</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody id="detailTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Load saved credentials on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedToken = localStorage.getItem('frilingue_airtable_token');
+            const savedBaseId = localStorage.getItem('frilingue_airtable_baseId');
+            if (savedToken) document.getElementById('apiToken').value = savedToken;
+            if (savedBaseId) document.getElementById('baseId').value = savedBaseId;
+        });
+
+        // Global variables
+        let allBookings = [];
+        let charts = {};
+        const campColors = [
+            '#f97316', '#3b82f6', '#10b981', '#8b5cf6', '#ec4899',
+            '#f59e0b', '#06b6d4', '#84cc16', '#6366f1', '#f43f5e'
+        ];
+
+        // Chart.js default config
+        Chart.defaults.color = '#94a3b8';
+        Chart.defaults.borderColor = '#2d3a52';
+
+        async function loadData() {
+            const baseId = document.getElementById('baseId').value.trim();
+            const apiToken = document.getElementById('apiToken').value.trim();
+            const tableName = document.getElementById('tableName').value.trim();
+
+            if (!baseId || !apiToken || !tableName) {
+                showError('Veuillez remplir tous les champs de configuration.');
+                return;
+            }
+
+            showLoading(true);
+            hideError();
+
+            try {
+                allBookings = await fetchAllRecords(baseId, apiToken, tableName);
+                
+                // Save credentials on successful connection
+                localStorage.setItem('frilingue_airtable_token', apiToken);
+                localStorage.setItem('frilingue_airtable_baseId', baseId);
+                
+                if (allBookings.length === 0) {
+                    showError('Aucune donnée trouvée dans la table.');
+                    showLoading(false);
+                    return;
+                }
+
+                document.getElementById('dashboardContent').classList.remove('hidden');
+                document.getElementById('lastUpdate').textContent = `Dernière mise à jour: ${new Date().toLocaleString('fr-FR')}`;
+                
+                processAndDisplayData();
+                showLoading(false);
+            } catch (error) {
+                showError(`Erreur de connexion: ${error.message}`);
+                showLoading(false);
+            }
+        }
+
+        async function fetchAllRecords(baseId, apiToken, tableName) {
+            let allRecords = [];
+            let offset = null;
+
+            do {
+                const url = new URL(`https://api.airtable.com/v0/${baseId}/${encodeURIComponent(tableName)}`);
+                url.searchParams.append('pageSize', '100');
+                if (offset) url.searchParams.append('offset', offset);
+
+                const response = await fetch(url, {
+                    headers: {
+                        'Authorization': `Bearer ${apiToken}`
+                    }
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error?.message || 'Erreur API Airtable');
+                }
+
+                const data = await response.json();
+                allRecords = allRecords.concat(data.records);
+                offset = data.offset;
+            } while (offset);
+
+            return allRecords;
+        }
+
+        function processAndDisplayData() {
+            const bookings = allBookings.map(record => ({
+                id: record.id,
+                bookingDate: record.fields['Booking date'] ? new Date(record.fields['Booking date']) : null,
+                camp: record.fields['Camp'] || 'Non défini',
+                price: parseFloat(record.fields['End Price']) || 0,
+                weeks: parseInt(record.fields['Number of weeks']) || 1,
+                arrivalDate: record.fields['Arrival date'] ? new Date(record.fields['Arrival date']) : null
+            })).filter(b => b.bookingDate);
+
+            // Calculate stats
+            const totalBookings = bookings.length;
+            const totalRevenue = bookings.reduce((sum, b) => sum + b.price, 0);
+            const totalWeeks = bookings.reduce((sum, b) => sum + b.weeks, 0);
+            const avgPrice = totalRevenue / totalBookings;
+
+            document.getElementById('totalBookings').textContent = totalBookings.toLocaleString('fr-FR');
+            document.getElementById('totalRevenue').textContent = formatCurrency(totalRevenue);
+            document.getElementById('totalWeeks').textContent = totalWeeks.toLocaleString('fr-FR');
+            document.getElementById('avgPrice').textContent = formatCurrency(avgPrice);
+
+            // Get years for filter
+            const years = [...new Set(bookings.map(b => b.bookingDate.getFullYear()))].sort((a, b) => b - a);
+            createYearSelector(years, bookings);
+
+            // Create charts
+            createMonthlyChart(bookings, years[0]);
+            createCampChart(bookings);
+            createRevenueChart(bookings);
+            createYearlyChart(bookings, years);
+            createDetailTable(bookings, years[0]);
+        }
+
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('fr-CH', {
+                style: 'currency',
+                currency: 'CHF',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(value);
+        }
+
+        function createYearSelector(years, bookings) {
+            const container = document.getElementById('yearSelector');
+            container.innerHTML = '';
+
+            years.forEach((year, index) => {
+                const btn = document.createElement('button');
+                btn.className = `filter-btn ${index === 0 ? 'active' : ''}`;
+                btn.textContent = year;
+                btn.onclick = () => {
+                    container.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    createMonthlyChart(bookings, year);
+                    createDetailTable(bookings, year);
+                };
+                container.appendChild(btn);
+            });
+        }
+
+        function createMonthlyChart(bookings, year) {
+            const monthlyData = new Array(12).fill(0);
+            
+            bookings.forEach(b => {
+                if (b.bookingDate.getFullYear() === year) {
+                    monthlyData[b.bookingDate.getMonth()]++;
+                }
+            });
+
+            const ctx = document.getElementById('monthlyChart').getContext('2d');
+            
+            if (charts.monthly) charts.monthly.destroy();
+
+            charts.monthly = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'],
+                    datasets: [{
+                        label: `Inscriptions ${year}`,
+                        data: monthlyData,
+                        borderColor: '#f97316',
+                        backgroundColor: 'rgba(249, 115, 22, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: '#f97316',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 5,
+                        pointHoverRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(45, 58, 82, 0.5)' }
+                        },
+                        x: {
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        }
+
+        function createCampChart(bookings) {
+            const campData = {};
+            bookings.forEach(b => {
+                const camp = Array.isArray(b.camp) ? b.camp[0] : b.camp;
+                campData[camp] = (campData[camp] || 0) + 1;
+            });
+
+            const sortedCamps = Object.entries(campData).sort((a, b) => b[1] - a[1]);
+            const labels = sortedCamps.map(([camp]) => camp);
+            const data = sortedCamps.map(([, count]) => count);
+
+            const ctx = document.getElementById('campChart').getContext('2d');
+            
+            if (charts.camp) charts.camp.destroy();
+
+            charts.camp = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: campColors.slice(0, labels.length),
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                boxWidth: 12,
+                                padding: 15
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function createRevenueChart(bookings) {
+            const revenueData = {};
+            bookings.forEach(b => {
+                const camp = Array.isArray(b.camp) ? b.camp[0] : b.camp;
+                revenueData[camp] = (revenueData[camp] || 0) + b.price;
+            });
+
+            const sortedCamps = Object.entries(revenueData).sort((a, b) => b[1] - a[1]);
+            const labels = sortedCamps.map(([camp]) => camp);
+            const data = sortedCamps.map(([, revenue]) => revenue);
+
+            const ctx = document.getElementById('revenueChart').getContext('2d');
+            
+            if (charts.revenue) charts.revenue.destroy();
+
+            charts.revenue = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Revenus (CHF)',
+                        data: data,
+                        backgroundColor: campColors.slice(0, labels.length),
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(45, 58, 82, 0.5)' },
+                            ticks: {
+                                callback: value => formatCurrency(value)
+                            }
+                        },
+                        y: {
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        }
+
+        function createYearlyChart(bookings, years) {
+            const yearlyData = {};
+            years.forEach(year => yearlyData[year] = 0);
+            
+            bookings.forEach(b => {
+                const year = b.bookingDate.getFullYear();
+                if (yearlyData[year] !== undefined) {
+                    yearlyData[year]++;
+                }
+            });
+
+            const sortedYears = Object.keys(yearlyData).sort();
+            const data = sortedYears.map(year => yearlyData[year]);
+
+            const ctx = document.getElementById('yearlyChart').getContext('2d');
+            
+            if (charts.yearly) charts.yearly.destroy();
+
+            charts.yearly = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: sortedYears,
+                    datasets: [{
+                        label: 'Inscriptions',
+                        data: data,
+                        backgroundColor: sortedYears.map((_, i) => campColors[i % campColors.length]),
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(45, 58, 82, 0.5)' }
+                        },
+                        x: {
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        }
+
+        function createDetailTable(bookings, year) {
+            const campMonthData = {};
+            
+            bookings.forEach(b => {
+                if (b.bookingDate.getFullYear() === year) {
+                    const camp = Array.isArray(b.camp) ? b.camp[0] : b.camp;
+                    if (!campMonthData[camp]) {
+                        campMonthData[camp] = new Array(12).fill(0);
+                    }
+                    campMonthData[camp][b.bookingDate.getMonth()]++;
+                }
+            });
+
+            const tbody = document.getElementById('detailTableBody');
+            tbody.innerHTML = '';
+
+            const sortedCamps = Object.entries(campMonthData)
+                .sort((a, b) => b[1].reduce((s, v) => s + v, 0) - a[1].reduce((s, v) => s + v, 0));
+
+            sortedCamps.forEach(([camp, months], index) => {
+                const total = months.reduce((sum, val) => sum + val, 0);
+                const row = document.createElement('tr');
+                
+                const colorIndex = index % campColors.length;
+                row.innerHTML = `
+                    <td>
+                        <span class="camp-badge" style="background: ${campColors[colorIndex]}20; color: ${campColors[colorIndex]};">
+                            ${camp}
+                        </span>
+                    </td>
+                    ${months.map(m => `<td>${m || '-'}</td>`).join('')}
+                    <td style="font-weight: 700; color: var(--accent-orange);">${total}</td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            // Add total row
+            const totals = new Array(12).fill(0);
+            Object.values(campMonthData).forEach(months => {
+                months.forEach((val, i) => totals[i] += val);
+            });
+            const grandTotal = totals.reduce((sum, val) => sum + val, 0);
+
+            const totalRow = document.createElement('tr');
+            totalRow.style.background = 'rgba(249, 115, 22, 0.1)';
+            totalRow.innerHTML = `
+                <td style="font-weight: 700;">TOTAL</td>
+                ${totals.map(t => `<td style="font-weight: 600;">${t}</td>`).join('')}
+                <td style="font-weight: 700; color: var(--accent-orange);">${grandTotal}</td>
+            `;
+            tbody.appendChild(totalRow);
+        }
+
+        function showLoading(show) {
+            document.getElementById('loadingOverlay').classList.toggle('visible', show);
+            document.getElementById('loadDataBtn').disabled = show;
+        }
+
+        function showError(message) {
+            const el = document.getElementById('errorMessage');
+            el.textContent = message;
+            el.classList.add('visible');
+        }
+
+        function hideError() {
+            document.getElementById('errorMessage').classList.remove('visible');
+        }
+    </script>
+</body>
+</html>
