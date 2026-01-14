@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>friLingue - igoooor Dashboard Inscriptions</title>
+    <title>friLingue - Dashboard Inscriptions</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
@@ -440,7 +440,7 @@
                 </div>
                 <div class="config-field">
                     <label>Nom de la table</label>
-                    <input type="text" id="tableName" value="bookings" placeholder="bookings">
+                    <input type="text" id="tableName" value="Bookings" placeholder="Bookings">
                 </div>
             </div>
             <button class="btn" id="loadDataBtn" onclick="loadData()">Charger les données</button>
@@ -640,7 +640,7 @@
         function processAndDisplayData() {
             const bookings = allBookings.map(record => ({
                 id: record.id,
-                bookingDate: record.fields['Booking date'] ? new Date(record.fields['Booking date']) : null,
+                bookingDate: record.fields['Booking Date'] ? new Date(record.fields['Booking Date']) : null,
                 camp: record.fields['Camp'] || 'Non défini',
                 price: parseFloat(record.fields['End Price']) || 0,
                 weeks: parseInt(record.fields['Number of weeks']) || 1,
