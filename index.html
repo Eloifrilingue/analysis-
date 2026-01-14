@@ -641,7 +641,7 @@
             const bookings = allBookings.map(record => ({
                 id: record.id,
                 bookingDate: record.fields['Booking Date'] ? new Date(record.fields['Booking Date']) : null,
-                camp: record.fields['Camp'] || 'Non défini',
+                camp: record.fields['Camp Name (from Camp)'] || 'Non défini',
                 price: parseFloat(record.fields['End Price']) || 0,
                 weeks: parseInt(record.fields['Number of weeks']) || 1,
                 arrivalDate: record.fields['Arrival date'] ? new Date(record.fields['Arrival date']) : null
