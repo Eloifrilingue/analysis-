@@ -397,6 +397,58 @@
             flex-wrap: wrap;
         }
 
+        .toggle-group {
+            display: flex;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            padding: 4px;
+            border: 1px solid var(--border);
+        }
+
+        .toggle-btn {
+            background: transparent;
+            border: none;
+            border-radius: 6px;
+            padding: 0.5rem 1rem;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'DM Sans', sans-serif;
+        }
+
+        .toggle-btn:hover {
+            color: var(--text-primary);
+        }
+
+        .toggle-btn.active {
+            background: var(--accent-orange);
+            color: white;
+        }
+
+        .year-btn {
+            background: var(--bg-secondary);
+            border: 2px solid var(--border);
+            border-radius: 6px;
+            padding: 0.4rem 0.8rem;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Space Mono', monospace;
+        }
+
+        .year-btn:hover {
+            border-color: var(--text-secondary);
+            color: var(--text-secondary);
+        }
+
+        .year-btn.active {
+            border-color: var(--year-color, var(--accent-orange));
+            background: var(--year-color, var(--accent-orange));
+            color: white;
+        }
+
         .no-data {
             text-align: center;
             padding: 3rem;
@@ -422,6 +474,7 @@
                 </div>
             </div>
             <div style="text-align: right;">
+                <div style="font-size: 1.2rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.25rem;">Bonjour Pelé et Jasmin 👋</div>
                 <span id="lastUpdate" style="font-size: 0.8rem; color: var(--text-muted);"></span>
             </div>
         </header>
@@ -470,12 +523,18 @@
                 <div class="chart-card full-width">
                     <div class="chart-header">
                         <div>
-                            <div class="chart-title">📈 Inscriptions par mois</div>
-                            <div class="chart-subtitle">Évolution mensuelle des réservations</div>
+                            <div class="chart-title" id="mainChartTitle">📈 Inscriptions par mois</div>
+                            <div class="chart-subtitle" id="mainChartSubtitle">Évolution mensuelle des réservations</div>
                         </div>
-                        <div class="year-selector" id="yearSelector"></div>
+                        <div style="display: flex; flex-direction: column; gap: 0.75rem; align-items: flex-end;">
+                            <div class="toggle-group" id="metricToggle">
+                                <button class="toggle-btn active" data-metric="bookings">Inscriptions</button>
+                                <button class="toggle-btn" data-metric="revenue">Revenus</button>
+                            </div>
+                            <div class="year-selector" id="yearSelector"></div>
+                        </div>
                     </div>
-                    <div class="chart-container">
+                    <div class="chart-container" style="height: 350px;">
                         <canvas id="monthlyChart"></canvas>
                     </div>
                 </div>
@@ -522,6 +581,7 @@
                             <div class="chart-title">📋 Détail par camp et par mois</div>
                             <div class="chart-subtitle">Tableau récapitulatif</div>
                         </div>
+                        <div class="year-selector" id="tableYearSelector"></div>
                     </div>
                     <div class="table-container">
                         <table id="detailTable">
@@ -562,8 +622,16 @@
 
         // Global variables
         let allBookings = [];
+        let processedBookings = [];
+        let availableYears = [];
+        let activeYears = [];
+        let currentMetric = 'bookings';
         let charts = {};
         const campColors = [
+            '#f97316', '#3b82f6', '#10b981', '#8b5cf6', '#ec4899',
+            '#f59e0b', '#06b6d4', '#84cc16', '#6366f1', '#f43f5e'
+        ];
+        const yearColors = [
             '#f97316', '#3b82f6', '#10b981', '#8b5cf6', '#ec4899',
             '#f59e0b', '#06b6d4', '#84cc16', '#6366f1', '#f43f5e'
         ];
@@ -638,7 +706,7 @@
         }
 
         function processAndDisplayData() {
-            const bookings = allBookings.map(record => ({
+            processedBookings = allBookings.map(record => ({
                 id: record.id,
                 bookingDate: record.fields['Booking Date'] ? new Date(record.fields['Booking Date']) : null,
                 camp: Array.isArray(record.fields['Camp Name (from Camp)']) ? record.fields['Camp Name (from Camp)'][0] : (record.fields['Camp Name (from Camp)'] || 'Non défini'),
@@ -648,26 +716,29 @@
             })).filter(b => b.bookingDate);
 
             // Calculate stats
-            const totalBookings = bookings.length;
-            const totalRevenue = bookings.reduce((sum, b) => sum + b.price, 0);
-            const totalWeeks = bookings.reduce((sum, b) => sum + b.weeks, 0);
-            const avgPrice = totalRevenue / totalBookings;
+            const totalBookingsCount = processedBookings.length;
+            const totalRevenue = processedBookings.reduce((sum, b) => sum + b.price, 0);
+            const totalWeeks = processedBookings.reduce((sum, b) => sum + b.weeks, 0);
+            const avgPrice = totalRevenue / totalBookingsCount;
 
-            document.getElementById('totalBookings').textContent = totalBookings.toLocaleString('fr-FR');
+            document.getElementById('totalBookings').textContent = totalBookingsCount.toLocaleString('fr-FR');
             document.getElementById('totalRevenue').textContent = formatCurrency(totalRevenue);
             document.getElementById('totalWeeks').textContent = totalWeeks.toLocaleString('fr-FR');
             document.getElementById('avgPrice').textContent = formatCurrency(avgPrice);
 
             // Get years for filter
-            const years = [...new Set(bookings.map(b => b.bookingDate.getFullYear()))].sort((a, b) => b - a);
-            createYearSelector(years, bookings);
+            availableYears = [...new Set(processedBookings.map(b => b.bookingDate.getFullYear()))].sort((a, b) => b - a);
+            activeYears = availableYears.slice(0, 3); // Activer les 3 dernières années par défaut
+
+            createYearSelector();
+            setupMetricToggle();
 
             // Create charts
-            createMonthlyChart(bookings, years[0]);
-            createCampChart(bookings);
-            createRevenueChart(bookings);
-            createYearlyChart(bookings, years);
-            createDetailTable(bookings, years[0]);
+            updateMainChart();
+            createCampChart(processedBookings);
+            createRevenueChart(processedBookings);
+            createYearlyChart(processedBookings, availableYears);
+            createDetailTable(processedBookings, availableYears[0]);
         }
 
         function formatCurrency(value) {
@@ -679,66 +750,141 @@
             }).format(value);
         }
 
-        function createYearSelector(years, bookings) {
+        function setupMetricToggle() {
+            const toggleBtns = document.querySelectorAll('#metricToggle .toggle-btn');
+            toggleBtns.forEach(btn => {
+                btn.onclick = () => {
+                    toggleBtns.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentMetric = btn.dataset.metric;
+                    
+                    // Update title
+                    const titleEl = document.getElementById('mainChartTitle');
+                    const subtitleEl = document.getElementById('mainChartSubtitle');
+                    if (currentMetric === 'bookings') {
+                        titleEl.textContent = '📈 Inscriptions par mois';
+                        subtitleEl.textContent = 'Évolution mensuelle des réservations';
+                    } else {
+                        titleEl.textContent = '💰 Revenus par mois';
+                        subtitleEl.textContent = 'Évolution mensuelle du chiffre d\'affaires';
+                    }
+                    
+                    updateMainChart();
+                };
+            });
+        }
+
+        function createYearSelector() {
             const container = document.getElementById('yearSelector');
             container.innerHTML = '';
 
-            years.forEach((year, index) => {
+            availableYears.forEach((year, index) => {
+                const color = yearColors[index % yearColors.length];
                 const btn = document.createElement('button');
-                btn.className = `filter-btn ${index === 0 ? 'active' : ''}`;
+                btn.className = `year-btn ${activeYears.includes(year) ? 'active' : ''}`;
                 btn.textContent = year;
+                btn.style.setProperty('--year-color', color);
+                btn.dataset.year = year;
+                btn.dataset.color = color;
+                
                 btn.onclick = () => {
-                    container.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                    createMonthlyChart(bookings, year);
-                    createDetailTable(bookings, year);
+                    btn.classList.toggle('active');
+                    if (activeYears.includes(year)) {
+                        activeYears = activeYears.filter(y => y !== year);
+                    } else {
+                        activeYears.push(year);
+                        activeYears.sort((a, b) => b - a);
+                    }
+                    updateMainChart();
                 };
                 container.appendChild(btn);
             });
         }
 
-        function createMonthlyChart(bookings, year) {
-            const monthlyData = new Array(12).fill(0);
-            
-            bookings.forEach(b => {
-                if (b.bookingDate.getFullYear() === year) {
-                    monthlyData[b.bookingDate.getMonth()]++;
-                }
-            });
-
+        function updateMainChart() {
             const ctx = document.getElementById('monthlyChart').getContext('2d');
             
             if (charts.monthly) charts.monthly.destroy();
+
+            const datasets = activeYears.map((year, index) => {
+                const monthlyData = new Array(12).fill(0);
+                const color = yearColors[availableYears.indexOf(year) % yearColors.length];
+                
+                processedBookings.forEach(b => {
+                    if (b.bookingDate.getFullYear() === year) {
+                        if (currentMetric === 'bookings') {
+                            monthlyData[b.bookingDate.getMonth()]++;
+                        } else {
+                            monthlyData[b.bookingDate.getMonth()] += b.price;
+                        }
+                    }
+                });
+
+                return {
+                    label: `${year}`,
+                    data: monthlyData,
+                    borderColor: color,
+                    backgroundColor: color + '20',
+                    borderWidth: 3,
+                    fill: false,
+                    tension: 0.4,
+                    pointBackgroundColor: color,
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointRadius: 4,
+                    pointHoverRadius: 7
+                };
+            });
 
             charts.monthly = new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels: ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'],
-                    datasets: [{
-                        label: `Inscriptions ${year}`,
-                        data: monthlyData,
-                        borderColor: '#f97316',
-                        backgroundColor: 'rgba(249, 115, 22, 0.1)',
-                        borderWidth: 3,
-                        fill: true,
-                        tension: 0.4,
-                        pointBackgroundColor: '#f97316',
-                        pointBorderColor: '#fff',
-                        pointBorderWidth: 2,
-                        pointRadius: 5,
-                        pointHoverRadius: 8
-                    }]
+                    datasets: datasets
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
+                    },
                     plugins: {
-                        legend: { display: false }
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: {
+                                usePointStyle: true,
+                                padding: 20
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) label += ': ';
+                                    if (currentMetric === 'revenue') {
+                                        label += formatCurrency(context.raw);
+                                    } else {
+                                        label += context.raw + ' inscriptions';
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
                     },
                     scales: {
                         y: {
                             beginAtZero: true,
-                            grid: { color: 'rgba(45, 58, 82, 0.5)' }
+                            grid: { color: 'rgba(45, 58, 82, 0.5)' },
+                            ticks: {
+                                callback: function(value) {
+                                    if (currentMetric === 'revenue') {
+                                        return formatCurrency(value);
+                                    }
+                                    return value;
+                                }
+                            }
                         },
                         x: {
                             grid: { display: false }
@@ -746,6 +892,11 @@
                     }
                 }
             });
+        }
+
+        function createMonthlyChart(bookings, year) {
+            // Cette fonction est remplacée par updateMainChart
+            updateMainChart();
         }
 
         function createCampChart(bookings) {
@@ -887,9 +1038,38 @@
         }
 
         function createDetailTable(bookings, year) {
+            // Créer le sélecteur d'année pour le tableau
+            createTableYearSelector();
+            
+            // Mettre à jour le tableau
+            updateDetailTable(year);
+        }
+
+        function createTableYearSelector() {
+            const container = document.getElementById('tableYearSelector');
+            container.innerHTML = '';
+
+            availableYears.forEach((year, index) => {
+                const color = yearColors[index % yearColors.length];
+                const btn = document.createElement('button');
+                btn.className = `year-btn ${index === 0 ? 'active' : ''}`;
+                btn.textContent = year;
+                btn.style.setProperty('--year-color', color);
+                btn.dataset.year = year;
+                
+                btn.onclick = () => {
+                    container.querySelectorAll('.year-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    updateDetailTable(parseInt(btn.dataset.year));
+                };
+                container.appendChild(btn);
+            });
+        }
+
+        function updateDetailTable(year) {
             const campMonthData = {};
             
-            bookings.forEach(b => {
+            processedBookings.forEach(b => {
                 if (b.bookingDate.getFullYear() === year) {
                     const camp = Array.isArray(b.camp) ? b.camp[0] : b.camp;
                     if (!campMonthData[camp]) {
@@ -932,7 +1112,7 @@
             const totalRow = document.createElement('tr');
             totalRow.style.background = 'rgba(249, 115, 22, 0.1)';
             totalRow.innerHTML = `
-                <td style="font-weight: 700;">TOTAL</td>
+                <td style="font-weight: 700;">TOTAL ${year}</td>
                 ${totals.map(t => `<td style="font-weight: 600;">${t}</td>`).join('')}
                 <td style="font-weight: 700; color: var(--accent-orange);">${grandTotal}</td>
             `;
