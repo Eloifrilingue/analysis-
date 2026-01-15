@@ -454,6 +454,90 @@
             padding: 3rem;
             color: var(--text-muted);
         }
+
+        /* Styles pour le rapport annuel */
+        .annual-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .annual-stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .annual-stat-card {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            border: 1px solid var(--border);
+        }
+
+        .annual-stat-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .annual-stat-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            font-family: 'Space Mono', monospace;
+        }
+
+        .annual-stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .annual-stat-detail {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+        }
+
+        .gender-bar {
+            display: flex;
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 1rem;
+            background: var(--bg-card);
+        }
+
+        .gender-bar-boys {
+            background: linear-gradient(90deg, #3b82f6, #60a5fa);
+            transition: width 0.5s ease;
+        }
+
+        .gender-bar-girls {
+            background: linear-gradient(90deg, #ec4899, #f472b6);
+            transition: width 0.5s ease;
+        }
+
+        .annual-charts-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .annual-charts-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .annual-chart-container {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid var(--border);
+        }
     </style>
 </head>
 <body>
@@ -607,6 +691,52 @@
                         </table>
                     </div>
                 </div>
+
+                <!-- Section Rapport Annuel -->
+                <div class="chart-card full-width" style="background: linear-gradient(135deg, var(--bg-card), #1e2a3d); border: 2px solid var(--accent-purple);">
+                    <div class="chart-header">
+                        <div>
+                            <div class="chart-title">📊 Rapport Annuel</div>
+                            <div class="chart-subtitle">Statistiques démographiques et sources</div>
+                        </div>
+                        <div class="year-selector" id="annualReportYearSelector"></div>
+                    </div>
+                    
+                    <!-- Stats cards pour le rapport annuel -->
+                    <div class="annual-stats-grid">
+                        <div class="annual-stat-card">
+                            <div class="annual-stat-icon">👦👧</div>
+                            <div class="annual-stat-label">Répartition Garçons/Filles</div>
+                            <div class="annual-stat-value" id="genderRatio">-</div>
+                            <div class="gender-bar" id="genderBar">
+                                <div class="gender-bar-boys" id="genderBarBoys"></div>
+                                <div class="gender-bar-girls" id="genderBarGirls"></div>
+                            </div>
+                        </div>
+                        <div class="annual-stat-card">
+                            <div class="annual-stat-icon">🎂</div>
+                            <div class="annual-stat-label">Âge Moyen</div>
+                            <div class="annual-stat-value" id="averageAge">-</div>
+                            <div class="annual-stat-detail" id="ageRange">-</div>
+                        </div>
+                    </div>
+
+                    <!-- Graphiques camembert -->
+                    <div class="annual-charts-grid">
+                        <div class="annual-chart-container">
+                            <div class="chart-title" style="font-size: 1rem; margin-bottom: 1rem;">🗣️ Langues apprises</div>
+                            <div class="chart-container">
+                                <canvas id="languageChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="annual-chart-container">
+                            <div class="chart-title" style="font-size: 1rem; margin-bottom: 1rem;">📢 Comment nous ont-ils trouvés ?</div>
+                            <div class="chart-container">
+                                <canvas id="sourceChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -712,7 +842,12 @@
                 camp: Array.isArray(record.fields['Camp Name (from Camp)']) ? record.fields['Camp Name (from Camp)'][0] : (record.fields['Camp Name (from Camp)'] || 'Non défini'),
                 price: parseFloat(record.fields['End Price']) || 0,
                 weeks: parseInt(record.fields['Number of weeks']) || 1,
-                arrivalDate: record.fields['Arrival date'] ? new Date(record.fields['Arrival date']) : null
+                arrivalDate: record.fields['Arrival date'] ? new Date(record.fields['Arrival date']) : null,
+                // Nouveaux champs
+                language: Array.isArray(record.fields['Language Learning']) ? record.fields['Language Learning'][0] : (record.fields['Language Learning'] || null),
+                source: Array.isArray(record.fields['How Did You Hear About Us?']) ? record.fields['How Did You Hear About Us?'][0] : (record.fields['How Did You Hear About Us?'] || null),
+                gender: Array.isArray(record.fields['Gender']) ? record.fields['Gender'][0] : (record.fields['Gender'] || null),
+                age: Array.isArray(record.fields['Age (from Kids on Trip)']) ? parseFloat(record.fields['Age (from Kids on Trip)'][0]) : (parseFloat(record.fields['Age (from Kids on Trip)']) || null)
             })).filter(b => b.bookingDate);
 
             // Calculate stats
@@ -739,6 +874,10 @@
             createRevenueChart(processedBookings);
             createYearlyChart(processedBookings, availableYears);
             createDetailTable(processedBookings, availableYears[0]);
+            
+            // Créer le rapport annuel
+            createAnnualReportYearSelector();
+            updateAnnualReport(availableYears[0]);
         }
 
         function formatCurrency(value) {
@@ -1132,6 +1271,214 @@
 
         function hideError() {
             document.getElementById('errorMessage').classList.remove('visible');
+        }
+
+        // ===== RAPPORT ANNUEL =====
+        
+        function createAnnualReportYearSelector() {
+            const container = document.getElementById('annualReportYearSelector');
+            container.innerHTML = '';
+
+            availableYears.forEach((year, index) => {
+                const color = yearColors[index % yearColors.length];
+                const btn = document.createElement('button');
+                btn.className = `year-btn ${index === 0 ? 'active' : ''}`;
+                btn.textContent = year;
+                btn.style.setProperty('--year-color', color);
+                btn.dataset.year = year;
+                
+                btn.onclick = () => {
+                    container.querySelectorAll('.year-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    updateAnnualReport(parseInt(btn.dataset.year));
+                };
+                container.appendChild(btn);
+            });
+        }
+
+        function updateAnnualReport(year) {
+            const yearBookings = processedBookings.filter(b => b.bookingDate.getFullYear() === year);
+            
+            // Calcul Genre
+            updateGenderStats(yearBookings);
+            
+            // Calcul Âge moyen
+            updateAgeStats(yearBookings);
+            
+            // Graphique Langues
+            createLanguageChart(yearBookings);
+            
+            // Graphique Sources
+            createSourceChart(yearBookings);
+        }
+
+        function updateGenderStats(bookings) {
+            const genderCounts = { boys: 0, girls: 0, other: 0 };
+            
+            bookings.forEach(b => {
+                if (b.gender) {
+                    const g = b.gender.toLowerCase();
+                    if (g.includes('boy') || g.includes('male') || g.includes('garçon') || g.includes('m')) {
+                        genderCounts.boys++;
+                    } else if (g.includes('girl') || g.includes('female') || g.includes('fille') || g.includes('f')) {
+                        genderCounts.girls++;
+                    } else {
+                        genderCounts.other++;
+                    }
+                }
+            });
+
+            const total = genderCounts.boys + genderCounts.girls;
+            if (total > 0) {
+                const boysPercent = Math.round((genderCounts.boys / total) * 100);
+                const girlsPercent = 100 - boysPercent;
+                
+                document.getElementById('genderRatio').textContent = `${boysPercent}% 👦 / ${girlsPercent}% 👧`;
+                document.getElementById('genderBarBoys').style.width = `${boysPercent}%`;
+                document.getElementById('genderBarGirls').style.width = `${girlsPercent}%`;
+            } else {
+                document.getElementById('genderRatio').textContent = 'Données non disponibles';
+                document.getElementById('genderBarBoys').style.width = '0%';
+                document.getElementById('genderBarGirls').style.width = '0%';
+            }
+        }
+
+        function updateAgeStats(bookings) {
+            const ages = bookings.filter(b => b.age && b.age > 0).map(b => b.age);
+            
+            if (ages.length > 0) {
+                const avgAge = ages.reduce((sum, a) => sum + a, 0) / ages.length;
+                const minAge = Math.min(...ages);
+                const maxAge = Math.max(...ages);
+                
+                document.getElementById('averageAge').textContent = `${avgAge.toFixed(1)} ans`;
+                document.getElementById('ageRange').textContent = `De ${minAge} à ${maxAge} ans`;
+            } else {
+                document.getElementById('averageAge').textContent = '-';
+                document.getElementById('ageRange').textContent = 'Données non disponibles';
+            }
+        }
+
+        function createLanguageChart(bookings) {
+            const languageData = {};
+            
+            bookings.forEach(b => {
+                if (b.language) {
+                    languageData[b.language] = (languageData[b.language] || 0) + 1;
+                }
+            });
+
+            const sortedLanguages = Object.entries(languageData).sort((a, b) => b[1] - a[1]);
+            const labels = sortedLanguages.map(([lang]) => lang);
+            const data = sortedLanguages.map(([, count]) => count);
+
+            const ctx = document.getElementById('languageChart').getContext('2d');
+            
+            if (charts.language) charts.language.destroy();
+
+            if (labels.length === 0) {
+                ctx.font = '14px DM Sans';
+                ctx.fillStyle = '#64748b';
+                ctx.textAlign = 'center';
+                ctx.fillText('Aucune donnée disponible', ctx.canvas.width / 2, ctx.canvas.height / 2);
+                return;
+            }
+
+            charts.language = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: ['#3b82f6', '#10b981', '#f97316', '#8b5cf6', '#ec4899', '#f59e0b'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                boxWidth: 12,
+                                padding: 15,
+                                font: { size: 11 }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = Math.round((context.raw / total) * 100);
+                                    return `${context.label}: ${context.raw} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function createSourceChart(bookings) {
+            const sourceData = {};
+            
+            bookings.forEach(b => {
+                if (b.source) {
+                    sourceData[b.source] = (sourceData[b.source] || 0) + 1;
+                }
+            });
+
+            const sortedSources = Object.entries(sourceData).sort((a, b) => b[1] - a[1]);
+            const labels = sortedSources.map(([source]) => source);
+            const data = sortedSources.map(([, count]) => count);
+
+            const ctx = document.getElementById('sourceChart').getContext('2d');
+            
+            if (charts.source) charts.source.destroy();
+
+            if (labels.length === 0) {
+                ctx.font = '14px DM Sans';
+                ctx.fillStyle = '#64748b';
+                ctx.textAlign = 'center';
+                ctx.fillText('Aucune donnée disponible', ctx.canvas.width / 2, ctx.canvas.height / 2);
+                return;
+            }
+
+            charts.source = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: ['#f97316', '#3b82f6', '#10b981', '#8b5cf6', '#ec4899', '#f59e0b', '#06b6d4', '#84cc16'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                boxWidth: 12,
+                                padding: 15,
+                                font: { size: 11 }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = Math.round((context.raw / total) * 100);
+                                    return `${context.label}: ${context.raw} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
         }
     </script>
 </body>
