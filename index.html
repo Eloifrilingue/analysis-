@@ -618,20 +618,20 @@
     <div class="container">
         <header>
             <div class="logo">
-                <img src="https://www.frilingue.ch/images/logos/logo_frilingue.svg" alt="friLingue" class="logo-img" onerror="this.style.display='none'">
+                <img src="https://frilingue.ch/wp-content/uploads/2023/03/frilingue-logo.png" alt="friLingue" class="logo-img" style="height: 50px; width: auto;">
                 <div>
                     <h1>Analytics Dashboard</h1>
                     <span>Analyse des inscriptions</span>
                 </div>
             </div>
             <div class="welcome-message">
-                <div class="greeting">Bonjour Pelé et Jasmin 👋</div>
+                <div class="greeting">Bonjour Pelé et Jasmin</div>
                 <div class="update-time" id="lastUpdate"></div>
             </div>
         </header>
 
         <div class="config-section" id="configSection">
-            <h2>⚙️ Configuration Airtable</h2>
+            <h2>Configuration Airtable</h2>
             <div class="error-message" id="errorMessage"></div>
             <div class="config-grid">
                 <div class="config-field">
@@ -674,7 +674,7 @@
                 <div class="chart-card full-width">
                     <div class="chart-header">
                         <div>
-                            <div class="chart-title" id="mainChartTitle">📈 Inscriptions par mois</div>
+                            <div class="chart-title" id="mainChartTitle">Inscriptions par mois</div>
                             <div class="chart-subtitle" id="mainChartSubtitle">Évolution mensuelle des réservations</div>
                         </div>
                         <div style="display: flex; flex-direction: column; gap: 0.75rem; align-items: flex-end;">
@@ -693,7 +693,7 @@
                 <div class="chart-card">
                     <div class="chart-header">
                         <div>
-                            <div class="chart-title">🏕️ Répartition par camp</div>
+                            <div class="chart-title">Répartition par camp</div>
                             <div class="chart-subtitle">Nombre d'inscriptions par lieu</div>
                         </div>
                     </div>
@@ -705,7 +705,7 @@
                 <div class="chart-card">
                     <div class="chart-header">
                         <div>
-                            <div class="chart-title">💰 Revenus par camp</div>
+                            <div class="chart-title">Revenus par camp</div>
                             <div class="chart-subtitle">Chiffre d'affaires par lieu</div>
                         </div>
                     </div>
@@ -717,7 +717,7 @@
                 <div class="chart-card full-width">
                     <div class="chart-header">
                         <div>
-                            <div class="chart-title">📋 Détail par camp et par mois</div>
+                            <div class="chart-title">Détail par camp et par mois</div>
                             <div class="chart-subtitle">Tableau récapitulatif</div>
                         </div>
                         <div class="year-selector" id="tableYearSelector"></div>
@@ -751,7 +751,7 @@
                 <div class="chart-card full-width annual-report-section">
                     <div class="chart-header">
                         <div>
-                            <div class="chart-title">📊 Rapport Annuel</div>
+                            <div class="chart-title">Rapport Annuel</div>
                             <div class="chart-subtitle">Statistiques démographiques et sources</div>
                         </div>
                         <div class="year-selector" id="annualReportYearSelector"></div>
@@ -759,7 +759,7 @@
 
                     <!-- Graphique Comparaison annuelle -->
                     <div style="margin-bottom: 2rem;">
-                        <div class="chart-title" style="font-size: 1rem; margin-bottom: 1rem;">📈 Comparaison annuelle - Inscriptions par année</div>
+                        <div class="chart-title" style="font-size: 1rem; margin-bottom: 1rem;">Comparaison annuelle - Inscriptions par année</div>
                         <div class="chart-container">
                             <canvas id="yearlyChart"></canvas>
                         </div>
@@ -768,7 +768,7 @@
                     <!-- Stats cards pour le rapport annuel -->
                     <div class="annual-stats-grid">
                         <div class="annual-stat-card">
-                            <div class="annual-stat-icon">👦👧</div>
+                            <div class="annual-stat-icon"></div>
                             <div class="annual-stat-label">Répartition Garçons/Filles</div>
                             <div class="annual-stat-value" id="genderRatio">-</div>
                             <div class="gender-bar" id="genderBar">
@@ -777,7 +777,7 @@
                             </div>
                         </div>
                         <div class="annual-stat-card">
-                            <div class="annual-stat-icon">🎂</div>
+                            <div class="annual-stat-icon"></div>
                             <div class="annual-stat-label">Âge Moyen</div>
                             <div class="annual-stat-value" id="averageAge">-</div>
                             <div class="annual-stat-detail" id="ageRange">-</div>
@@ -787,13 +787,13 @@
                     <!-- Graphiques camembert -->
                     <div class="annual-charts-grid">
                         <div class="annual-chart-container">
-                            <div class="chart-title" style="font-size: 1rem; margin-bottom: 1rem;">🗣️ Langues apprises</div>
+                            <div class="chart-title" style="font-size: 1rem; margin-bottom: 1rem;">Langues apprises</div>
                             <div class="chart-container">
                                 <canvas id="languageChart"></canvas>
                             </div>
                         </div>
                         <div class="annual-chart-container">
-                            <div class="chart-title" style="font-size: 1rem; margin-bottom: 1rem;">📢 Comment nous ont-ils trouvés ?</div>
+                            <div class="chart-title" style="font-size: 1rem; margin-bottom: 1rem;">Comment nous ont-ils trouvés ?</div>
                             <div class="chart-container">
                                 <canvas id="sourceChart"></canvas>
                             </div>
@@ -981,10 +981,10 @@
                     const titleEl = document.getElementById('mainChartTitle');
                     const subtitleEl = document.getElementById('mainChartSubtitle');
                     if (currentMetric === 'bookings') {
-                        titleEl.textContent = '📈 Inscriptions par mois';
+                        titleEl.textContent = 'Inscriptions par mois';
                         subtitleEl.textContent = 'Évolution mensuelle des réservations';
                     } else {
-                        titleEl.textContent = '💰 Revenus par mois';
+                        titleEl.textContent = 'Revenus par mois';
                         subtitleEl.textContent = 'Évolution mensuelle du chiffre d\'affaires';
                     }
                     
@@ -1166,7 +1166,10 @@
                 revenueData[camp] = (revenueData[camp] || 0) + b.price;
             });
 
-            const sortedCamps = Object.entries(revenueData).sort((a, b) => b[1] - a[1]);
+            // Filtrer les camps avec revenus > 0 et trier
+            const sortedCamps = Object.entries(revenueData)
+                .filter(([, revenue]) => revenue > 0)
+                .sort((a, b) => b[1] - a[1]);
             const labels = sortedCamps.map(([camp]) => camp);
             const data = sortedCamps.map(([, revenue]) => revenue);
 
@@ -1413,7 +1416,7 @@
                 const boysPercent = Math.round((genderCounts.boys / total) * 100);
                 const girlsPercent = 100 - boysPercent;
                 
-                document.getElementById('genderRatio').textContent = `${boysPercent}% 👦 / ${girlsPercent}% 👧`;
+                document.getElementById('genderRatio').textContent = `${boysPercent}% Garçons / ${girlsPercent}% Filles`;
                 document.getElementById('genderBarBoys').style.width = `${boysPercent}%`;
                 document.getElementById('genderBarGirls').style.width = `${girlsPercent}%`;
             } else {
